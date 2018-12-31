@@ -1,0 +1,58 @@
+---
+- name: CoreDNS | Make sure coredns user exists
+  user:
+    name: coredns
+    group: users
+    # groups: sudo
+    state: present
+- name: CoreDNS | Make sure the coredns config folders exist
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: coredns
+    group: users
+  with_items:
+    - /etc/coredns
+    - /etc/coredns/zones
+- name: CoreDNS | Download Binary
+  get_url:
+    url: https://github.com/coredns/coredns/releases/download/v1.3.0/coredns_1.3.0_linux_amd64.tgz
+    dest: /tmp/coredns.tgz
+- name: CoreDNS | Extract
+  unarchive: 
+    src: /tmp/coredns.tgz
+    dest: /tmp
+    remote_src: yes
+- name: CoreDNS | Install
+  copy:
+    src: /tmp/coredns
+    dest: /usr/local/bin/coredns
+    mode: 0755
+    remote_src: yes
+# - name: CoreDNS | Set capabilities
+#  capabilities:
+#    path: /usr/local/bin/coredns
+#    capability: cap_net_bind_service+ep
+#    state: present
+- name: CoreDNS | Copy systemd unit file
+  copy:
+    src: coredns.service
+    dest: /etc/systemd/system/coredns.service
+    mode: 0644
+- name: CoreDNS | Copy config files
+  template:
+    src: Corefile.j2
+    dest: /etc/coredns/Corefile
+    owner: coredns
+    group: users
+- name: CoreDNS | Copy zone files
+  copy:
+    src: zones/
+    dest: /etc/coredns/zones
+- name: CoreDNS | Restart service
+  systemd:
+    name: coredns
+    daemon_reload: yes
+    enabled: yes
+    state: restarted
+

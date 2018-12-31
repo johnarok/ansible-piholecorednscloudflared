@@ -1,0 +1,11 @@
+---
+- name: PiHole with CoreDNS and CloudFlared for DNS over Https
+  hosts: dns
+  roles:
+    - role: coredns
+      tags: ["coredns", "dns"]
+    - role: cloudflared 
+      tags: ["dns"]
+    - role: pihole-x
+      tags: ["dns"]
+

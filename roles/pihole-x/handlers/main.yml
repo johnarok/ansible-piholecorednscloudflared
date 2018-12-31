@@ -1,0 +1,5 @@
+---
+- name: Pihole | Restart dnsmasq
+  systemd:
+    name: pihole-FTL.service
+    state: restarted

@@ -1,0 +1,14 @@
+.:{{ coredns_bind_port }} {
+    health :{{ coredns_health_port }} {
+        lameduck 1s
+    }
+
+    file /etc/coredns/zones/db.srv.johnarok.com srv.johnarok.com
+    file /etc/coredns/zones/db.johnarok.com     johnarok.com
+    file /etc/coredns/zones/db.192.168      168.192.in-addr.arpa
+
+    prometheus :{{ coredns_prometheus_port }}
+    debug
+    log
+    errors
+}

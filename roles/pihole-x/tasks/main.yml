@@ -1,0 +1,33 @@
+---
+#- name: Pihole | Download Installer
+#  get_url:
+#    url: https://install.pi-hole.net
+#    dest: /tmp/basic-install.sh
+#- name: Pihole | Install
+#  command: /tmp/basic-install.sh --unattended
+- name: Pihole | CoreDNS Forwards
+  copy:
+    src: 04-coredns-local.conf
+    dest: /etc/dnsmasq.d/04-coredns-local.conf
+    mode: 0644
+  become: yes
+- name: Pihole | Cloudflared Forwards
+  copy:
+    src: 50-cloudflared.conf
+    dest: /etc/dnsmasq.d/50-cloudflared.conf
+    mode: 0644
+  become: yes
+- name: Pihole | Comment existing Pi-Hole DNS servers in Setup
+  replace:
+    path: /etc/pihole/setupVars.conf
+    regexp: '^(PIHOLE_DNS.*)'
+    replace: '#\1'
+- name: Pihole | Comment existing Pi-Hole DNS servers in DNSMASQ
+  replace:
+    path:  /etc/dnsmasq.d/01-pihole.conf
+    regexp: '^(server=.*)'
+    replace: '#\1'
+- name: Pihole | Restart DNSMASQ service 
+  service:
+    name: pihole-FTL.service
+    state: restarted

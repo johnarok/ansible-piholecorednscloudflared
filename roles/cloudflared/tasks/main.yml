@@ -1,0 +1,49 @@
+---
+- name: cloudflared | Make sure cloudflared group exists
+  group:
+    name: cloudflared
+    state: present
+- name: cloudflared | Make sure cloudflared user exists
+  user:
+    name: cloudflared
+    group: cloudflared
+    state: present
+- name: cloudflared | Make sure the cloudflared config folders exist
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: cloudflared
+    group: cloudflared
+  with_items:
+    - /etc/cloudflared
+- name: cloudflared | Install
+  copy:
+    src: cloudflared.conf
+    dest: /etc/cloudflared/cloudflared.conf
+    mode: 0755
+- name: cloudflared | Download Binary
+  get_url:
+    url: https://bin.equinox.io/c/VdrWdbjqyF/cloudflared-stable-linux-amd64.tgz
+    dest: /tmp/cloudflared.tgz
+- name: cloudflared | Extract
+  unarchive: 
+    src: /tmp/cloudflared.tgz
+    dest: /tmp
+    remote_src: yes
+- name: cloudflared | Install
+  copy:
+    src: /tmp/cloudflared
+    dest: /usr/local/bin/cloudflared
+    mode: 0755
+    remote_src: yes
+- name: cloudflared | Copy systemd unit file
+  copy:
+    src: cloudflared.service
+    dest: /etc/systemd/system/cloudflared.service
+    mode: 0644
+  notify: cloudflared | Restart service
+- name: cloudflared | Enable and Start 
+  systemd:
+    name: cloudflared.service
+    state: started
+    enabled: yes
